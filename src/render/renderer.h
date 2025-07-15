@@ -5,7 +5,10 @@
 #include <vector>
 
 #include "point.h"
-#include "shape.h"
+#include "figure/figure.h"
+#include "figure/shape.h"
+#include "colorRGBA.h"
+#include "figure/drawFigure.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -89,7 +92,7 @@ class Renderer {
 
         // задаем цвет
         int colorLocation = glGetUniformLocation(shaderProgram, "uColor");
-        glUniform3f(colorLocation, color[0], color[1], color[2]);
+        glUniform4f(colorLocation, color[0], color[1], color[2], color[3]);
 
         // Привязываем VAO с треугольником
         glBindVertexArray(VAO);
@@ -238,12 +241,22 @@ class Renderer {
     // Лучше использовать для прямоугольников
     void DrawShape(vector<float> vertices, string texturePath) {
         vector<unsigned int> indices(0);
-        for (int i = 1; i < vertices.size()-1; i++) {
+        for (int i = 1; i < vertices.size()/5-1; i++) {
             indices.push_back(0);
             indices.push_back(i);
             indices.push_back(i+1);
         }
         DrawPoligon(vertices.data(), indices.data(), texturePath, vertices.size()/5, indices.size()/3);
+    }
+
+
+
+    void DrawShape(DrawFigure figure) {
+        if (figure.IsTextureType) {
+            DrawShape(figure.vertices, figure.texturePath);
+        } else {
+            DrawShape(figure.vertices, figure.color);
+        }
     }
 
 

@@ -76,6 +76,13 @@ int main() {
         -0.5f, -0.5f, 0.0f, -0.3f, 0.0f,
         -0.8f, 0.0f, 0.0f, 0.0f, 0.5f
     };
+    vector<Point> vp = {
+        Point(-0.5f, 0.5f, 0.0f, 0.0f, 1.0f),
+        Point(0.5f, 0.5f, 0.0f, 1.0f, 1.0f),
+        Point(0.5f, -0.5f, 0.0f, 1.0f, 0.0f),
+        Point(-0.5f, -0.5f, 0.0f, 0.0f, 0.0f),
+        //Point(-0.8f, 0.0f, 0.0f, 0.0f, 0.5f)
+    };
     unsigned int indices[] = {  // note that we start from 0!
         0, 1, 2,   // first triangle
         1, 2, 3    // second triangle
@@ -122,11 +129,15 @@ int main() {
 
         float color[] = {1, 1, 1};
         float color2[] = {0, 1, 1};
+        ColorRGBA color3(1, 1, 0);
 
         // renderer.DrawTriangle(vertices1, color);
         // renderer.DrawPoligon(verticesUV, indices, "../src/textures/pig.jpg");
-        renderer.DrawShape(vertices6, "../src/textures/wall.jpg");
+        // renderer.DrawShape(vertices6, "../src/textures/wall.jpg");
         // renderer.DrawShape(vertices6, color2);
+
+        Shape shape(vp, "../src/textures/wall.jpg");
+        renderer.DrawShape(shape.GetTextureDrawFigure());
 
         // Меняем буферы (движок окон)
         glfwSwapBuffers(window);
