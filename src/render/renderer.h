@@ -10,6 +10,9 @@
 #include "colorRGBA.h"
 #include "figure/drawFigure.h"
 
+#include <../../libs/glm/glm.cpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -112,11 +115,11 @@ class Renderer {
     //  Метод для рисования фигуры по вершинам с определенным цветом
     void DrawShape(vector<float> vertices, float* color) {
         vector<unsigned int> indices(0);
-        for (int i = 1; i < vertices.size()/3-1; i++) {
-            indices.push_back(0);
-            indices.push_back(i);
-            indices.push_back(i+1);
+        indices = GenerateIndices(vertices, 3);
+        for (int i = 0; i < indices.size(); i++) {
+            cout << indices[i] << " ";
         }
+        cout << endl;
         DrawPoligon(vertices.data(), color, indices.data(), vertices.size()/3, indices.size()/3);
     }
 
@@ -241,11 +244,7 @@ class Renderer {
     // Лучше использовать для прямоугольников
     void DrawShape(vector<float> vertices, string texturePath) {
         vector<unsigned int> indices(0);
-        for (int i = 1; i < vertices.size()/5-1; i++) {
-            indices.push_back(0);
-            indices.push_back(i);
-            indices.push_back(i+1);
-        }
+        indices = GenerateIndices(vertices, 5);
         DrawPoligon(vertices.data(), indices.data(), texturePath, vertices.size()/5, indices.size()/3);
     }
 
@@ -262,6 +261,98 @@ class Renderer {
 
 
     private:
+
+    struct Vec2 {
+        float x, y;
+    };
+
+    // Проверка, в каком направлении обход: >0 — против часовой, <0 — по часовой
+    float cross(const Vec2& a, const Vec2& b, const Vec2& c) {
+        return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+    }
+
+    // Проверка, находится ли точка p внутри треугольника abc
+    bool pointInTriangle(const Vec2& p, const Vec2& a, const Vec2& b, const Vec2& c) {
+        float area = fabs(cross(a, b, c));
+        float a1 = fabs(cross(p, a, b));
+        float a2 = fabs(cross(p, b, c));
+        float a3 = fabs(cross(p, c, a));
+        return fabs(area - (a1 + a2 + a3)) < 1e-5f;
+    }
+
+    vector<unsigned int> GenerateIndices(vector<float> vertices, int vertix_size) {
+        int n = vertices.size() / vertix_size;
+        if (n < 3) return {};
+
+        // Скопируем вершины в Vec2
+        vector<Vec2> points(n);
+        for (int i = 0; i < n; ++i) {
+            points[i] = {vertices[i * vertix_size], vertices[i * vertix_size + 1]};
+        }
+
+        // Начальный порядок вершин
+        vector<int> V(n);
+        for (int i = 0; i < n; ++i) V[i] = i;
+
+        // Проверим направление обхода
+        float sum = 0;
+        for (int i = 0; i < n; ++i) {
+            Vec2 p0 = points[i];
+            Vec2 p1 = points[(i + 1) % n];
+            sum += (p1.x - p0.x) * (p1.y + p0.y);
+        }
+        // Если по часовой, то перевернём
+        if (sum > 0) reverse(V.begin(), V.end());
+
+        vector<unsigned int> indices;
+        int count = 0;
+        while (V.size() > 3 && count < 1000) {
+            bool earFound = false;
+            for (int i = 0; i < V.size(); ++i) {
+                int i0 = V[(i - 1 + V.size()) % V.size()];
+                int i1 = V[i];
+                int i2 = V[(i + 1) % V.size()];
+
+                Vec2& a = points[i0];
+                Vec2& b = points[i1];
+                Vec2& c = points[i2];
+
+                if (cross(a, b, c) <= 0) continue;  // невыпуклая вершина — не ухо
+
+                // Проверим, нет ли других точек внутри уха
+                bool hasPointInside = false;
+                for (int j = 0; j < V.size(); ++j) {
+                    int vi = V[j];
+                    if (vi == i0 || vi == i1 || vi == i2) continue;
+                    if (pointInTriangle(points[vi], a, b, c)) {
+                        hasPointInside = true;
+                        break;
+                    }
+                }
+
+                if (hasPointInside) continue;
+
+                // Ухо найдено
+                indices.push_back(i0);
+                indices.push_back(i1);
+                indices.push_back(i2);
+                V.erase(V.begin() + i);
+                earFound = true;
+                break;
+            }
+            if (!earFound) break; // что-то пошло не так
+            count++;
+        }
+
+        // Последний треугольник
+        if (V.size() == 3) {
+            indices.push_back(V[0]);
+            indices.push_back(V[1]);
+            indices.push_back(V[2]);
+        }
+
+        return indices;
+    }
 
 
     // Чтение данных из файлов, используется для шейдеров

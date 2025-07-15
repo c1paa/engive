@@ -1,5 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -78,10 +80,12 @@ int main() {
     };
     vector<Point> vp = {
         Point(-0.5f, 0.5f, 0.0f, 0.0f, 1.0f),
+        Point(0.0f, 0.6f, 0.0f, 0.0f, 1.0f),
         Point(0.5f, 0.5f, 0.0f, 1.0f, 1.0f),
         Point(0.5f, -0.5f, 0.0f, 1.0f, 0.0f),
+        Point(0.0f, -0.6f, 0.0f, 1.0f, 0.0f),
         Point(-0.5f, -0.5f, 0.0f, 0.0f, 0.0f),
-        //Point(-0.8f, 0.0f, 0.0f, 0.0f, 0.5f)
+        Point(0.1f, 0.0f, 0.0f, 0.0f, 0.5f)
     };
     unsigned int indices[] = {  // note that we start from 0!
         0, 1, 2,   // first triangle
@@ -92,11 +96,11 @@ int main() {
 
 
     //  - 1. refactoring, coments
-    //   2. - point, rectangle, ellipse image?
+    //   2. - point, rectangle, ellipse
     //   3. shape
-    //   4. cut image
-    //   5. render overloads
-    //   6.
+    //   4. - settexturepos
+    //   5. text button input cursor
+    //   6. ECS types
 
 
     // https://learnopengl.com/Getting-started/Textures
@@ -137,6 +141,10 @@ int main() {
         // renderer.DrawShape(vertices6, color2);
 
         Shape shape(vp, "../src/textures/wall.jpg");
+        shape.color = color3;
+        Point p1(-0.4f, 0.0f, 0.0f, 0.0f, 0.5f);
+        Point p2(0.5f, 0.6f, 0.0f, 1.0f, 1.0f);
+        shape.SetTexturePosition(p1, p2);
         renderer.DrawShape(shape.GetTextureDrawFigure());
 
         // Меняем буферы (движок окон)

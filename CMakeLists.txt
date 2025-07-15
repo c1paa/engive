@@ -8,6 +8,7 @@ add_subdirectory(src/libs/glfw)
 include_directories(
         src/libs/glad/include
         src/libs/glfw/include
+        src/libs/glm
 )
 
 add_executable(engive_v1
