@@ -7,6 +7,7 @@
 #include "point.h"
 #include "shape.h"
 #include "colorRGBA.h"
+#include "camera.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -18,38 +19,61 @@ class Renderer {
     public:
 
     GLFWwindow* window;
+    Camera& camera;
+    unsigned int textureShader, colorShader;
 
-    Renderer(GLFWwindow* window) : window(window) {
-
+    Renderer(GLFWwindow* window, Camera& camera):camera(camera){
+        this->window = window;
+        textureShader = GenerateTextureShader();
+        colorShader = GenerateColorShader();
     }
 
-    // Рисование полигона по трем вершинам с определенным цветом
-    void DrawPoligon(float* vertices, float* color, unsigned int* indices = new unsigned int[3]{0, 1, 2}, int vertices_size = 3, int indices_size = 1, mat4 trans = mat4(1.0f)) {
-        GLuint VAO, VBO;
-        unsigned int EBO;
+    unsigned int GenerateTextureShader() {
+        string vertexSource = readFile("../src/shaders/poligon_texture.vert");         // вертексный шейдер
+        const char* vertexShaderSource = vertexSource.c_str();
+        unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
+        glCompileShader(vertexShader);
 
-        glGenBuffers(1, &EBO);      // создаем EBO
-        glGenVertexArrays(1, &VAO);  // создаём VAO
-        glGenBuffers(1, &VBO);       // создаём VBO
+        // Проверка ошибок компиляции
+        int success;
+        char infoLog[512];
+        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
+            std::cerr << "Ошибка компиляции вершинного шейдера:\n" << infoLog << std::endl;
+        }
 
-        glBindVertexArray(VAO);      // активируем VAO
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);           // активируем VBO
-        glBufferData(GL_ARRAY_BUFFER, vertices_size * 3 * sizeof(float), vertices, GL_STATIC_DRAW);  // копируем данные вершин в VBO
+        string fragmentSource = readFile("../src/shaders/poligon_texture.frag");     // фрагментный шейдер
+        const char* fragmentShaderSource = fragmentSource.c_str();
+        unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
+        glCompileShader(fragmentShader);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);       // активируем EBO
-        // копируем данные порядка рисовки полигонов в VBO
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size * 3 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+        // Проверка ошибок
+        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
+            std::cerr << "Ошибка компиляции фрагментного шейдера:\n" << infoLog << std::endl;
+        }
 
-        // говорим OpenGL, как читать вершины: атрибут 0, 3 компоненты float, без нормализации, шаг 3 float, смещение 0
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);  // включаем этот атрибут
+        unsigned int shaderProgram = glCreateProgram();     // создание программы шейдеров
+        glAttachShader(shaderProgram, vertexShader);
+        glAttachShader(shaderProgram, fragmentShader);
+        glLinkProgram(shaderProgram);
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);  // отвязываем VBO
-        glBindVertexArray(0);              // отвязываем VAO
+        // Проверка ошибок линковки
+        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+        if (!success) {
+            glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
+            std::cerr << "Ошибка линковки шейдерной программы:\n" << infoLog << std::endl;
+        }
+        glDeleteShader(vertexShader);     // удаляем шейдеры (отдельные)
+        glDeleteShader(fragmentShader);
+        return shaderProgram;
+    }
 
-        // shaders ====================================================================================
-
-
+    unsigned int GenerateColorShader() {
         string vertexSource = readFile("../src/shaders/poligon_color.vert");         // вертексный шейдер
         const char* vertexShaderSource = vertexSource.c_str();
         unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -89,17 +113,45 @@ class Renderer {
             glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
             std::cerr << "Ошибка линковки шейдерной программы:\n" << infoLog << std::endl;
         }
+        glDeleteShader(vertexShader);     // удаляем шейдеры (отдельные)
+        glDeleteShader(fragmentShader);
+        return shaderProgram;
+    }
 
-        // Draw =====================================================================================================
+    // Рисование полигона по трем вершинам с определенным цветом
+    void DrawPoligon(float* vertices, float* color, unsigned int* indices, int vertices_size = 3, int indices_size = 1, mat4 trans = mat4(1.0f)) {
+        GLuint VAO, VBO;
+        unsigned int EBO;
+
+        glGenBuffers(1, &EBO);      // создаем EBO
+        glGenVertexArrays(1, &VAO);  // создаём VAO
+        glGenBuffers(1, &VBO);       // создаём VBO
+
+        glBindVertexArray(VAO);      // активируем VAO
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);           // активируем VBO
+        glBufferData(GL_ARRAY_BUFFER, vertices_size * 3 * sizeof(float), vertices, GL_STATIC_DRAW);  // копируем данные вершин в VBO
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);       // активируем EBO
+        // копируем данные порядка рисовки полигонов в VBO
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size * 3 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+
+        // говорим OpenGL, как читать вершины: атрибут 0, 3 компоненты float, без нормализации, шаг 3 float, смещение 0
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);  // включаем этот атрибут
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);  // отвязываем VBO
+        glBindVertexArray(0);              // отвязываем VAO
+
+                // Draw =====================================================================================================
 
         // Используем шейдеры
-        glUseProgram(shaderProgram);
+        glUseProgram(colorShader);
 
         // задаем цвет
-        int colorLocation = glGetUniformLocation(shaderProgram, "uColor");
+        int colorLocation = glGetUniformLocation(colorShader, "uColor");
         glUniform4f(colorLocation, color[0], color[1], color[2], color[3]);
 
-        unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
+        unsigned int transformLoc = glGetUniformLocation(colorShader, "transform");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
         // unsigned int modelLoc = glGetUniformLocation(shaderProgram, "model");
@@ -117,12 +169,12 @@ class Renderer {
         // Рисуем треугольник
         glDrawElements(GL_TRIANGLES, indices_size * 3, GL_UNSIGNED_INT, 0);
 
-        // glDeleteBuffers(1, &VBO);            // удаляем VBO
-        // glDeleteVertexArrays(1, &VAO);       // удаляем VAO
+        glDeleteBuffers(1, &VBO);            // удаляем VBO
+        glDeleteVertexArrays(1, &VAO);       // удаляем VAO
+        glDeleteBuffers(1, &EBO);
 
-        glDeleteShader(vertexShader);     // удаляем шейдеры (отдельные)
-        glDeleteShader(fragmentShader);
-
+        glBindVertexArray(0);
+        glUseProgram(0);
     }
 
 
@@ -137,15 +189,16 @@ class Renderer {
 
 
     void DrawPoligon(float* vertices, unsigned int* indices, string texturePath, int vertices_size = 3, int indices_size = 1, mat4 trans = mat4(1.0f)) {
-        glm::mat4 model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-        glm::mat4 view          = glm::mat4(1.0f);
+        //glm::mat4 model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        //glm::mat4 view          = glm::mat4(1.0f);
         glm::mat4 projection    = glm::mat4(1.0f);
         //model = rotate(model, radians(-55.0f), vec3(1.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-        // int window_width, window_height;
-        // glfwGetFramebufferSize(window, &window_width, &window_height); // Получаем актуальный размер окна
-        projection = glm::perspective(glm::radians(45.0f), (float)1600 / (float)1200, 0.1f, 100.0f);
+       // model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+        //view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        mat4 view = camera.LookAt();
+        int window_width, window_height;
+        glfwGetFramebufferSize(window, &window_width, &window_height); // Получаем актуальный размер окна
+        projection = glm::perspective(glm::radians(60.0f), (float)window_width / (float)window_height, 0.1f, 100.0f);
 
 
 
@@ -201,76 +254,58 @@ class Renderer {
         }
         stbi_image_free(data);
 
-
-        // shaders ===========================================================================
-
-
-        string vertexSource = readFile("../src/shaders/poligon_texture.vert");         // вертексный шейдер
-        const char* vertexShaderSource = vertexSource.c_str();
-        unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-        glCompileShader(vertexShader);
-
-        // Проверка ошибок компиляции
-        int success;
-        char infoLog[512];
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-            std::cerr << "Ошибка компиляции вершинного шейдера:\n" << infoLog << std::endl;
-        }
-
-        string fragmentSource = readFile("../src/shaders/poligon_texture.frag");     // фрагментный шейдер
-        const char* fragmentShaderSource = fragmentSource.c_str();
-        unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-        glCompileShader(fragmentShader);
-
-        // Проверка ошибок
-        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
-            std::cerr << "Ошибка компиляции фрагментного шейдера:\n" << infoLog << std::endl;
-        }
-
-        unsigned int shaderProgram = glCreateProgram();     // создание программы шейдеров
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-        glLinkProgram(shaderProgram);
-
-        // Проверка ошибок линковки
-        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-        if (!success) {
-            glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
-            std::cerr << "Ошибка линковки шейдерной программы:\n" << infoLog << std::endl;
-        }
-
         // Draw =============================================================================================
 
         glBindTexture(GL_TEXTURE_2D, texture);
-        glUseProgram(shaderProgram);
+        glUseProgram(textureShader);
 
-        unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
+        unsigned int transformLoc = glGetUniformLocation(textureShader, "transform");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
-        unsigned int modelLoc = glGetUniformLocation(shaderProgram, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        // unsigned int modelLoc = glGetUniformLocation(shaderProgram, "model");
+        // glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-        unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
+        unsigned int viewLoc = glGetUniformLocation(textureShader, "view");
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-        unsigned int projectionLoc = glGetUniformLocation(shaderProgram, "projection");
+        unsigned int projectionLoc = glGetUniformLocation(textureShader, "projection");
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-
-        glDeleteShader(vertexShader);     // удаляем шейдеры (отдельные)
-        glDeleteShader(fragmentShader);
 
         glBindVertexArray(VAO);
         //glDrawElements(GL_TRIANGLES, indices_size * 3, GL_UNSIGNED_INT, 0);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+       // glDrawArrays(GL_TRIANGLES, 0, 36);
+        glm::vec3 cubePositions[] = {
+            glm::vec3( 0.0f,  0.0f,  0.0f),
+            glm::vec3( 2.0f,  5.0f, -15.0f),
+            glm::vec3(-1.5f, -2.2f, -2.5f),
+            glm::vec3(-3.8f, -2.0f, -12.3f),
+            glm::vec3( 2.4f, -0.4f, -3.5f),
+            glm::vec3(-1.7f,  3.0f, -7.5f),
+            glm::vec3( 1.3f, -2.0f, -2.5f),
+            glm::vec3( 1.5f,  2.0f, -2.5f),
+            glm::vec3( 1.5f,  0.2f, -1.5f),
+            glm::vec3(-1.3f,  1.0f, -1.5f)
+        };
+        for(unsigned int i = 0; i < 10; i++)
+        {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = glm::rotate(model, radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            unsigned int modelLoc = glGetUniformLocation(textureShader, "model");
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-        // glDeleteBuffers(1, &VBO);            // удаляем VBO
-        // glDeleteVertexArrays(1, &VAO);       // удаляем VAO
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+
+        glDeleteBuffers(1, &VBO);            // удаляем VBO
+        glDeleteVertexArrays(1, &VAO);       // удаляем VAO
+        glDeleteBuffers(1, &EBO);
+        glDeleteTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindVertexArray(0);
+        glUseProgram(0);
+
     }
 
 

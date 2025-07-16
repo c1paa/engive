@@ -13,6 +13,7 @@ include_directories(
 
 add_executable(engive_v1
         src/main.cpp
+        src/render/input.cpp
         src/libs/glad/src/glad.c
 )
 

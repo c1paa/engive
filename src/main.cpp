@@ -6,7 +6,6 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <chrono>
 #include <vector>
 
 #include "../src/render/renderer.h"
@@ -16,10 +15,8 @@ using namespace std;
 using namespace glm;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    // Обновляем проекцию с новыми размерами окна
     glViewport(0, 0, width, height);
 }
-
 
 int main() {
     if (!glfwInit()) {
@@ -44,9 +41,6 @@ int main() {
         std::cerr << "ERROR: Init GLAD" << std::endl;
         return -1;
     }
-
-    double lastTime = glfwGetTime();
-    int nbFrames = 0;
 
     float vertices1[] = {
         -0.2f, 1.0f, 0.0f,
@@ -161,6 +155,13 @@ int main() {
     //   5. text button input cursor
     //   6. ECS types
     //  - 7. - pixels
+    //     create poligons
+    //     camera class
+    //     delete ram
+    //     generate shader once
+    //     model view projection understand
+    //     transform?
+    //
 
 
     // https://learnopengl.com/Getting-started/Textures
@@ -172,24 +173,34 @@ int main() {
 
 
 
-
-    Renderer renderer(window);
+    Camera camera(vec3(0, 0, 2), vec3(0, 0, -1));
+    Renderer renderer(window, camera);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetWindowUserPointer(window, &camera);
+    glfwSetKeyCallback(window, Input::keyboard_callback);
+    glfwSetCursorPosCallback(window, Input::mouseCallback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // glfwSetKeyCallback(window, key_callback);
     glEnable(GL_DEPTH_TEST);
-
+    GLfloat deltaTime = 0.0f;	// Время, прошедшее между последним и текущим кадром
+    GLfloat lastFrame = 0.0f;
 
     while (!glfwWindowShouldClose(window)) {
-        double currentTime = glfwGetTime();
-        nbFrames++;
-        if (currentTime - lastTime >= 1.0) {
-            double fps = double(nbFrames) / (currentTime - lastTime);
-            stringstream ss;
-            ss << "Engive fps: " << int(fps);
-            glfwSetWindowTitle(window, ss.str().c_str());
+        if (Input::cursorCatch)
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        else
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
-            nbFrames = 0;
-            lastTime = currentTime;
-        }
+        glfwPollEvents();
+        GLfloat currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
+        stringstream ss;
+        ss << "Engive fps: " << int(1.0f / deltaTime);
+        glfwSetWindowTitle(window, ss.str().c_str());
+
+        camera.update_callbacks(deltaTime);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -219,7 +230,6 @@ int main() {
         renderer.DrawPoligon(cube, a, "../src/textures/pig.jpg", 36, 12, mat4(1.0f));
         // Меняем буферы (движок окон)
         glfwSwapBuffers(window);
-        glfwPollEvents();
 
 
 
