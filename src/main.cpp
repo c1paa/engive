@@ -15,6 +15,12 @@
 using namespace std;
 using namespace glm;
 
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    // Обновляем проекцию с новыми размерами окна
+    glViewport(0, 0, width, height);
+}
+
+
 int main() {
     if (!glfwInit()) {
         std::cerr << "ERROR: Init GLFW" << std::endl;
@@ -91,14 +97,58 @@ int main() {
     };
 
     vector<Point> vp2 = {
-        Point(100.0f, 500.0f, 0.0f, 0.0f, 1.0f),
-        Point(500.0f, 500.0f, 0.0f, 1.0f, 1.0f),
-        Point(500.0f, 100.0f, 0.0f, 1.0f, 0.0f),
-        Point(100.0f, 100.0f, 0.0f, 0.0f, 0.0f),
+        Point(-0.5f, 0.5f, 0.0f, 0.0f, 1.0f),
+        Point(0.5f, 0.5f, 0.0f, 1.0f, 1.0f),
+        Point(0.5f, -0.5f, 0.0f, 1.0f, 0.0f),
+        Point(-0.5f, -0.5f, 0.0f, 0.0f, 0.0f),
     };
     unsigned int indices[] = {  // note that we start from 0!
         0, 1, 2,   // first triangle
         1, 2, 3    // second triangle
+    };
+
+    float cube[] = {
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
 
 
@@ -124,6 +174,8 @@ int main() {
 
 
     Renderer renderer(window);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glEnable(GL_DEPTH_TEST);
 
 
     while (!glfwWindowShouldClose(window)) {
@@ -139,6 +191,8 @@ int main() {
             lastTime = currentTime;
         }
 
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         // Очистка экрана
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -151,16 +205,18 @@ int main() {
         // renderer.DrawShape(vertices6, "../src/textures/wall.jpg");
         // renderer.DrawShape(vertices6, color2);
 
-        Shape shape(vp2, "../src/textures/wall.jpg");
+        Shape shape(vp2, "../src/textures/minecraft.jpg");
         shape.color = color3;
         Point p1(100.0f, 100.0f, 0.0f, 0.0f, 0.0f);
         Point p2(500.0f, 500.0f, 5.0f, 1.0f, 1.0f);
-        shape.SetTexturePosition(p1, p2);
-        glm::mat4 trans = glm::mat4(1.0f);
-        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0));
-        trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
-        renderer.DrawShape(shape, COLOR_DRAWTYPE, trans);
+        // shape.SetTexturePosition(p1, p2);
+        // glm::mat4 trans = glm::mat4(1.0f);
+        // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0));
+        // trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
+        // renderer.DrawShape(shape, TEXTURE_DRAWTYPE);
 
+        unsigned int a[12];
+        renderer.DrawPoligon(cube, a, "../src/textures/pig.jpg", 36, 12, mat4(1.0f));
         // Меняем буферы (движок окон)
         glfwSwapBuffers(window);
         glfwPollEvents();

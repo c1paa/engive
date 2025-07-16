@@ -19,7 +19,9 @@ class Renderer {
 
     GLFWwindow* window;
 
-    Renderer(GLFWwindow* window) : window(window) {}
+    Renderer(GLFWwindow* window) : window(window) {
+
+    }
 
     // Рисование полигона по трем вершинам с определенным цветом
     void DrawPoligon(float* vertices, float* color, unsigned int* indices = new unsigned int[3]{0, 1, 2}, int vertices_size = 3, int indices_size = 1, mat4 trans = mat4(1.0f)) {
@@ -100,6 +102,15 @@ class Renderer {
         unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
+        // unsigned int modelLoc = glGetUniformLocation(shaderProgram, "model");
+        // glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        //
+        // unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
+        // glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        //
+        // unsigned int projectionLoc = glGetUniformLocation(shaderProgram, "projection");
+        // glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
         // Привязываем VAO с треугольником
         glBindVertexArray(VAO);
 
@@ -125,7 +136,19 @@ class Renderer {
 
 
 
-    void DrawPoligon(float* vertices, unsigned int* indices, string texturePath, int vertices_size = 3, int indices_size = 1) {
+    void DrawPoligon(float* vertices, unsigned int* indices, string texturePath, int vertices_size = 3, int indices_size = 1, mat4 trans = mat4(1.0f)) {
+        glm::mat4 model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        glm::mat4 view          = glm::mat4(1.0f);
+        glm::mat4 projection    = glm::mat4(1.0f);
+        //model = rotate(model, radians(-55.0f), vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        // int window_width, window_height;
+        // glfwGetFramebufferSize(window, &window_width, &window_height); // Получаем актуальный размер окна
+        projection = glm::perspective(glm::radians(45.0f), (float)1600 / (float)1200, 0.1f, 100.0f);
+
+
+
         GLuint VAO, VBO;
         unsigned int EBO;
 
@@ -227,11 +250,24 @@ class Renderer {
         glBindTexture(GL_TEXTURE_2D, texture);
         glUseProgram(shaderProgram);
 
+        unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
+        unsigned int modelLoc = glGetUniformLocation(shaderProgram, "model");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+        unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+        unsigned int projectionLoc = glGetUniformLocation(shaderProgram, "projection");
+        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
         glDeleteShader(vertexShader);     // удаляем шейдеры (отдельные)
         glDeleteShader(fragmentShader);
 
         glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, indices_size * 3, GL_UNSIGNED_INT, 0);
+        //glDrawElements(GL_TRIANGLES, indices_size * 3, GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // glDeleteBuffers(1, &VBO);            // удаляем VBO
         // glDeleteVertexArrays(1, &VAO);       // удаляем VAO
