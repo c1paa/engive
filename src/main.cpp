@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -12,6 +13,7 @@
 
 
 using namespace std;
+using namespace glm;
 
 int main() {
     if (!glfwInit()) {
@@ -87,6 +89,13 @@ int main() {
         Point(-0.5f, -0.5f, 0.0f, 0.0f, 0.0f),
         Point(0.1f, 0.0f, 0.0f, 0.0f, 0.5f)
     };
+
+    vector<Point> vp2 = {
+        Point(100.0f, 500.0f, 0.0f, 0.0f, 1.0f),
+        Point(500.0f, 500.0f, 0.0f, 1.0f, 1.0f),
+        Point(500.0f, 100.0f, 0.0f, 1.0f, 0.0f),
+        Point(100.0f, 100.0f, 0.0f, 0.0f, 0.0f),
+    };
     unsigned int indices[] = {  // note that we start from 0!
         0, 1, 2,   // first triangle
         1, 2, 3    // second triangle
@@ -96,11 +105,12 @@ int main() {
 
 
     //  - 1. refactoring, coments
-    //   2. - point, rectangle, ellipse
+    //  -  2. - point, rectangle, ellipse
     //   3. shape
-    //   4. - settexturepos
+    //  - 4. settexturepos
     //   5. text button input cursor
     //   6. ECS types
+    //  - 7. - pixels
 
 
     // https://learnopengl.com/Getting-started/Textures
@@ -113,7 +123,8 @@ int main() {
 
 
 
-    Renderer renderer;
+    Renderer renderer(window);
+
 
     while (!glfwWindowShouldClose(window)) {
         double currentTime = glfwGetTime();
@@ -140,12 +151,15 @@ int main() {
         // renderer.DrawShape(vertices6, "../src/textures/wall.jpg");
         // renderer.DrawShape(vertices6, color2);
 
-        Shape shape(vp, "../src/textures/wall.jpg");
+        Shape shape(vp2, "../src/textures/wall.jpg");
         shape.color = color3;
-        Point p1(-0.4f, 0.0f, 0.0f, 0.0f, 0.5f);
-        Point p2(0.5f, 0.6f, 0.0f, 1.0f, 1.0f);
+        Point p1(100.0f, 100.0f, 0.0f, 0.0f, 0.0f);
+        Point p2(500.0f, 500.0f, 5.0f, 1.0f, 1.0f);
         shape.SetTexturePosition(p1, p2);
-        renderer.DrawShape(shape.GetTextureDrawFigure());
+        glm::mat4 trans = glm::mat4(1.0f);
+        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0));
+        trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
+        renderer.DrawShape(shape, COLOR_DRAWTYPE, trans);
 
         // Меняем буферы (движок окон)
         glfwSwapBuffers(window);

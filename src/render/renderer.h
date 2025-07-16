@@ -5,25 +5,24 @@
 #include <vector>
 
 #include "point.h"
-#include "figure/figure.h"
-#include "figure/shape.h"
+#include "shape.h"
 #include "colorRGBA.h"
-#include "figure/drawFigure.h"
-
-#include <../../libs/glm/glm.cpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 using namespace std;
-
+using namespace glm;
 
 class Renderer {
     public:
 
+    GLFWwindow* window;
+
+    Renderer(GLFWwindow* window) : window(window) {}
+
     // Рисование полигона по трем вершинам с определенным цветом
-    void DrawPoligon(float* vertices, float* color, unsigned int* indices = new unsigned int[3]{0, 1, 2}, int vertices_size = 3, int indices_size = 1) {
+    void DrawPoligon(float* vertices, float* color, unsigned int* indices = new unsigned int[3]{0, 1, 2}, int vertices_size = 3, int indices_size = 1, mat4 trans = mat4(1.0f)) {
         GLuint VAO, VBO;
         unsigned int EBO;
 
@@ -47,6 +46,7 @@ class Renderer {
         glBindVertexArray(0);              // отвязываем VAO
 
         // shaders ====================================================================================
+
 
         string vertexSource = readFile("../src/shaders/poligon_color.vert");         // вертексный шейдер
         const char* vertexShaderSource = vertexSource.c_str();
@@ -97,6 +97,9 @@ class Renderer {
         int colorLocation = glGetUniformLocation(shaderProgram, "uColor");
         glUniform4f(colorLocation, color[0], color[1], color[2], color[3]);
 
+        unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
         // Привязываем VAO с треугольником
         glBindVertexArray(VAO);
 
@@ -113,14 +116,10 @@ class Renderer {
 
 
     //  Метод для рисования фигуры по вершинам с определенным цветом
-    void DrawShape(vector<float> vertices, float* color) {
+    void DrawShape(vector<float> vertices, float* color, mat4 trans = mat4(1.0f)) {
         vector<unsigned int> indices(0);
         indices = GenerateIndices(vertices, 3);
-        for (int i = 0; i < indices.size(); i++) {
-            cout << indices[i] << " ";
-        }
-        cout << endl;
-        DrawPoligon(vertices.data(), color, indices.data(), vertices.size()/3, indices.size()/3);
+        DrawPoligon(vertices.data(), color, indices.data(), vertices.size()/3, indices.size()/3, trans);
     }
 
 
@@ -249,12 +248,28 @@ class Renderer {
     }
 
 
+#define COLOR_DRAWTYPE true
+#define TEXTURE_DRAWTYPE false
 
-    void DrawShape(DrawFigure figure) {
-        if (figure.IsTextureType) {
-            DrawShape(figure.vertices, figure.texturePath);
+    void DrawShape(Shape shape, bool drawType = COLOR_DRAWTYPE, mat4 trans = mat4(1.0f)) {
+        vector <float> vertices;
+        vector <Point> vertices_ = shape.vertices;
+        if (drawType) {
+            for (int i = 0; i < vertices_.size(); i++) {
+                vertices.push_back(vertices_[i].x);
+                vertices.push_back(vertices_[i].y);
+                vertices.push_back(vertices_[i].z);
+            }
+            DrawShape(vertices, shape.color, trans);
         } else {
-            DrawShape(figure.vertices, figure.color);
+            for (int i = 0; i < vertices_.size(); i++) {
+                vertices.push_back(vertices_[i].x);
+                vertices.push_back(vertices_[i].y);
+                vertices.push_back(vertices_[i].z);
+                vertices.push_back(vertices_[i].u);
+                vertices.push_back(vertices_[i].v);
+            }
+            DrawShape(vertices, shape.texturePath);
         }
     }
 
