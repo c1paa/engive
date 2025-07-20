@@ -30,6 +30,7 @@ class Camera {
         up = vec3(0, 1, 0);
     }
     mat4 LookAt() {
+        vec3 a = position + front;
         return lookAt(position, position + front, up);
     }
     void update_callbacks(GLfloat deltatime)

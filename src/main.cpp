@@ -108,7 +108,7 @@ int main() {
          0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
         -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
+        //
         -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
          0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
          0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
@@ -145,22 +145,67 @@ int main() {
         -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
 
+    float cubeNormalsTextures[] = {
+    // positions          // normals           // texture coords
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
+};
+
 
 
 
     //  - 1. refactoring, coments
     //  -  2. - point, rectangle, ellipse
-    //   3. shape
+    //  -  3. shape
     //  - 4. settexturepos
     //   5. text button input cursor
     //   6. ECS types
     //  - 7. - pixels
-    //     create poligons
-    //     camera class
-    //     delete ram
-    //     generate shader once
-    //     model view projection understand
-    //     transform?
+    //     create poligons assimp
+    //     - camera class
+    //     - delete ram
+    //     - generate shader once
+    //     - model view projection understand
+    //     - transform?
     //
 
 
@@ -173,7 +218,7 @@ int main() {
 
 
 
-    Camera camera(vec3(0, 0, 2), vec3(0, 0, -1));
+    Camera camera(vec3(0, 1, 4), vec3(0, 0, -1));
     Renderer renderer(window, camera);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetWindowUserPointer(window, &camera);
@@ -184,6 +229,8 @@ int main() {
     glEnable(GL_DEPTH_TEST);
     GLfloat deltaTime = 0.0f;	// Время, прошедшее между последним и текущим кадром
     GLfloat lastFrame = 0.0f;
+
+
 
     while (!glfwWindowShouldClose(window)) {
         if (Input::cursorCatch)
@@ -207,8 +254,20 @@ int main() {
         // Очистка экрана
         glClear(GL_COLOR_BUFFER_BIT);
 
-        float color[] = {1, 1, 1};
-        float color2[] = {0, 1, 1};
+        float color[] = {0.7f, 0.8f, 0.31f};
+        float color2[] = {1, 1, 1};
+        Renderer::Material m;
+        m.ambient = vec3(1.0f, 0.5f, 0.31f);
+        m.diffuse = vec3(1.0f, 0.5f, 0.31f);
+        m.specular = vec3(0.5f, 0.5f, 0.5f);
+        m.shininess = 32;
+
+        Renderer::Light light;
+        light.ambient = vec3(0.2f, 0.2f, 0.2f);
+        light.diffuse = vec3(0.5f, 0.5f, 0.5f);
+        light.specular = vec3(1.0f, 1.0f, 1.0f);
+        light.position = vec3(sin((float)glfwGetTime())*2.0f, 1, cos((float)glfwGetTime())*2.0f);;
+
         ColorRGBA color3(1, 1, 0);
 
         // renderer.DrawTriangle(vertices1, color);
@@ -224,10 +283,16 @@ int main() {
         // glm::mat4 trans = glm::mat4(1.0f);
         // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0));
         // trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
-        // renderer.DrawShape(shape, TEXTURE_DRAWTYPE);
 
+        mat4 transLight = glm::mat4(1.0f);
+        transLight = glm::translate(transLight, light.position);
+        transLight = glm::scale(transLight, glm::vec3(0.2f));
+        // mat4 transCube = glm::mat4(1.0f);
+        // transCube = rotate(transCube, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
         unsigned int a[12];
-        renderer.DrawPoligon(cube, a, "../src/textures/pig.jpg", 36, 12, mat4(1.0f));
+        renderer.DrawPoligon(cubeNormalsTextures, m, "../src/textures/container.png", "../src/textures/container_specular.png",light, a, 36, 12, renderer.textureShader);
+        renderer.DrawPoligon(cubeNormalsTextures, m, light, a, 36, 12, renderer.lightShader, transLight);
+        // renderer.DrawPoligon(cube, a, "../src/textures/pig.jpg", 36, 12, mat4(1.0f));
         // Меняем буферы (движок окон)
         glfwSwapBuffers(window);
 
