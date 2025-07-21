@@ -3,6 +3,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <assimp/Importer.hpp>
+#include <assimp//scene.h>
+#include <assimp/postprocess.h>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -230,7 +233,10 @@ int main() {
     GLfloat deltaTime = 0.0f;	// Время, прошедшее между последним и текущим кадром
     GLfloat lastFrame = 0.0f;
 
-
+    Shader textureShader("../src/shaders/poligon_texture.vs", "../src/shaders/poligon_texture.fs");
+    Shader colorShader("../src/shaders/poligon_color.vs", "../src/shaders/poligon_color.fs");
+    Shader lightShader("../src/shaders/poligon_color.vs", "../src/shaders/light.fs");
+    // Model ourModel("../src/models/Barrel_OBJ.obj");
 
     while (!glfwWindowShouldClose(window)) {
         if (Input::cursorCatch)
@@ -262,14 +268,41 @@ int main() {
         m.specular = vec3(0.5f, 0.5f, 0.5f);
         m.shininess = 32;
 
-        Renderer::Light light;
+        Light light;
         light.ambient = vec3(0.2f, 0.2f, 0.2f);
         light.diffuse = vec3(0.5f, 0.5f, 0.5f);
         light.specular = vec3(1.0f, 1.0f, 1.0f);
-        light.position = vec3(sin((float)glfwGetTime())*2.0f, 1, cos((float)glfwGetTime())*2.0f);;
+        light.position = vec3(sin((float)glfwGetTime())*2.0f, 1, cos((float)glfwGetTime())*2.0f);
+
+        DirLight dirLight;
+        dirLight.ambient = vec3(0.2f, 0.2f, 0.2f);
+        dirLight.diffuse = vec3(0.5f, 0.5f, 0.5f);
+        dirLight.specular = vec3(1.0f, 1.0f, 1.0f);
+        dirLight.direction = vec3(0, -1, 0);
+
+        DirLight dirLights[] = {dirLight};
+
+        PointLight pointLight1;
+        pointLight1.ambient = vec3(0.2f, 0.2f, 0.2f);
+        pointLight1.diffuse = vec3(0.5f, 0.5f, 0.5f);
+        pointLight1.specular = vec3(1.0f, 1.0f, 1.0f);
+        pointLight1.constant = 1.0f;
+        pointLight1.linear = 0.09f;
+        pointLight1.quadratic = 0.032f;
+        pointLight1.position = vec3(sin((float)glfwGetTime())*2.0f, 1, cos((float)glfwGetTime())*2.0f);
+        PointLight pointLight2;
+        pointLight2.ambient = vec3(0.2f, 0.2f, 0.2f);
+        pointLight2.diffuse = vec3(0.5f, 0.5f, 0.5f);
+        pointLight2.specular = vec3(1.0f, 1.0f, 1.0f);
+        pointLight2.constant = 1.0f;
+        pointLight2.linear = 0.09f;
+        pointLight2.quadratic = 0.032f;
+        pointLight2.position = vec3(cos((float)glfwGetTime())*2.0f, 1, sin((float)glfwGetTime())*2.0f);
+
+        PointLight pointLights[] = {pointLight1, pointLight2};
+
 
         ColorRGBA color3(1, 1, 0);
-
         // renderer.DrawTriangle(vertices1, color);
         // renderer.DrawPoligon(verticesUV, indices, "../src/textures/pig.jpg");
         // renderer.DrawShape(vertices6, "../src/textures/wall.jpg");
@@ -290,9 +323,17 @@ int main() {
         // mat4 transCube = glm::mat4(1.0f);
         // transCube = rotate(transCube, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
         unsigned int a[12];
-        renderer.DrawPoligon(cubeNormalsTextures, m, "../src/textures/container.png", "../src/textures/container_specular.png",light, a, 36, 12, renderer.textureShader);
-        renderer.DrawPoligon(cubeNormalsTextures, m, light, a, 36, 12, renderer.lightShader, transLight);
+        renderer.DrawPoligon(
+            cubeNormalsTextures,
+            m, "../src/textures/container.png", "../src/textures/container_specular.png",
+            dirLights, 1,
+            pointLights, 1,
+            a, 36, 12, textureShader);
+        renderer.DrawPoligon(cubeNormalsTextures, m, light, a, 36, 12, lightShader, transLight);
         // renderer.DrawPoligon(cube, a, "../src/textures/pig.jpg", 36, 12, mat4(1.0f));
+
+        // ourModel.Draw();
+
         // Меняем буферы (движок окон)
         glfwSwapBuffers(window);
 

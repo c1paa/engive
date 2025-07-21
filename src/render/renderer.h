@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -8,6 +10,9 @@
 #include "shape.h"
 #include "colorRGBA.h"
 #include "camera.h"
+#include "model.h"
+#include "shader.h"
+#include "light.h"
 #include "mesh.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -26,162 +31,20 @@ class Renderer {
         float shininess;
     };
 
-    struct Light {
-        vec3 position;
-
-        vec3 ambient;
-        vec3 diffuse;
-        vec3 specular;
-    };
-
     GLFWwindow* window;
     Camera& camera;
-    unsigned int textureShader, colorShader, lightShader;
 
     Renderer(GLFWwindow* window, Camera& camera):camera(camera){
         this->window = window;
-        textureShader = GenerateTextureShader();
-        colorShader = GenerateColorShader();
-        lightShader = GenerateLightShader();
     }
 
-    unsigned int GenerateTextureShader() {
-        string vertexSource = readFile("../src/shaders/poligon_texture.vs");         // вертексный шейдер
-        const char* vertexShaderSource = vertexSource.c_str();
-        unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-        glCompileShader(vertexShader);
-
-        // Проверка ошибок компиляции
-        int success;
-        char infoLog[512];
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-            std::cerr << "Ошибка компиляции вершинного шейдера:\n" << infoLog << std::endl;
-        }
-
-        string fragmentSource = readFile("../src/shaders/poligon_texture.fs");     // фрагментный шейдер
-        const char* fragmentShaderSource = fragmentSource.c_str();
-        unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-        glCompileShader(fragmentShader);
-
-        // Проверка ошибок
-        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
-            std::cerr << "Ошибка компиляции фрагментного шейдера:\n" << infoLog << std::endl;
-        }
-
-        unsigned int shaderProgram = glCreateProgram();     // создание программы шейдеров
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-        glLinkProgram(shaderProgram);
-
-        // Проверка ошибок линковки
-        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-        if (!success) {
-            glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
-            std::cerr << "Ошибка линковки шейдерной программы:\n" << infoLog << std::endl;
-        }
-        glDeleteShader(vertexShader);     // удаляем шейдеры (отдельные)
-        glDeleteShader(fragmentShader);
-        return shaderProgram;
-    }
-
-    unsigned int GenerateColorShader() {
-        string vertexSource = readFile("../src/shaders/poligon_color.vs");         // вертексный шейдер
-        const char* vertexShaderSource = vertexSource.c_str();
-        unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-        glCompileShader(vertexShader);
-
-        // проверка ошибок компиляции
-        int success;
-        char infoLog[512];
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-            std::cerr << "Ошибка компиляции вершинного шейдера:\n" << infoLog << std::endl;
-        }
-
-        string fragmentSource = readFile("../src/shaders/poligon_color.fs");     // фрагментный шейдер
-        const char* fragmentShaderSource = fragmentSource.c_str();
-        unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-        glCompileShader(fragmentShader);
-
-        // проверка ошибок
-        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
-            std::cerr << "Ошибка компиляции фрагментного шейдера:\n" << infoLog << std::endl;
-        }
-
-        unsigned int shaderProgram = glCreateProgram();     // создание программы шейдеров
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-        glLinkProgram(shaderProgram);
-
-        // проверка ошибок линковки
-        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-        if (!success) {
-            glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
-            std::cerr << "Ошибка линковки шейдерной программы:\n" << infoLog << std::endl;
-        }
-        glDeleteShader(vertexShader);     // удаляем шейдеры (отдельные)
-        glDeleteShader(fragmentShader);
-        return shaderProgram;
-    }
-
-    unsigned int GenerateLightShader() {
-        string vertexSource = readFile("../src/shaders/poligon_color.vs");         // вертексный шейдер
-        const char* vertexShaderSource = vertexSource.c_str();
-        unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-        glCompileShader(vertexShader);
-
-        // проверка ошибок компиляции
-        int success;
-        char infoLog[512];
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-            std::cerr << "Ошибка компиляции вершинного шейдера:\n" << infoLog << std::endl;
-        }
-
-        string fragmentSource = readFile("../src/shaders/light.fs");     // фрагментный шейдер
-        const char* fragmentShaderSource = fragmentSource.c_str();
-        unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-        glCompileShader(fragmentShader);
-
-        // проверка ошибок
-        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
-            std::cerr << "Ошибка компиляции фрагментного шейдера:\n" << infoLog << std::endl;
-        }
-
-        unsigned int shaderProgram = glCreateProgram();     // создание программы шейдеров
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-        glLinkProgram(shaderProgram);
-
-        // проверка ошибок линковки
-        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-        if (!success) {
-            glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
-            std::cerr << "Ошибка линковки шейдерной программы:\n" << infoLog << std::endl;
-        }
-        glDeleteShader(vertexShader);     // удаляем шейдеры (отдельные)
-        glDeleteShader(fragmentShader);
-        return shaderProgram;
-    }
 
     // Рисование полигона по трем вершинам с определенным цветом
-    void DrawPoligon(float* vertices, Material material, Light light, unsigned int* indices, int vertices_size, int indices_size, unsigned int shaderProgram, mat4 trans = mat4(1.0f)) {
+    void DrawPoligon(float* vertices,
+        Material material,
+        Light light, unsigned int* indices, int vertices_size, int indices_size,
+        Shader shader,
+        mat4 trans = mat4(1.0f)) {
         glm::mat4 model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         //glm::mat4 view          = glm::mat4(1.0f);
         glm::mat4 projection    = glm::mat4(1.0f);
@@ -221,48 +84,48 @@ class Renderer {
                 // Draw =====================================================================================================
 
         // Используем шейдеры
-        glUseProgram(shaderProgram);
+        glUseProgram(shader.ID);
 
         // задаем цвеn
 
-        GLint lightAmbientLoc = glGetUniformLocation(shaderProgram, "light.ambient");
+        GLint lightAmbientLoc = glGetUniformLocation(shader.ID, "light.ambient");
         glUniform3f(lightAmbientLoc, light.ambient.x, light.ambient.y, light.ambient.z);
 
-        GLint lightDiffuseLoc = glGetUniformLocation(shaderProgram, "light.diffuse");
+        GLint lightDiffuseLoc = glGetUniformLocation(shader.ID, "light.diffuse");
         glUniform3f(lightDiffuseLoc, light.diffuse.x, light.diffuse.y, light.diffuse.z);
 
-        GLint lightSpecularLoc = glGetUniformLocation(shaderProgram, "light.specular");
+        GLint lightSpecularLoc = glGetUniformLocation(shader.ID, "light.specular");
         glUniform3f(lightSpecularLoc, light.specular.x, light.specular.y, light.specular.z);
 
-        GLint lightPositionLoc = glGetUniformLocation(shaderProgram, "light.position");
+        GLint lightPositionLoc = glGetUniformLocation(shader.ID, "light.position");
         glUniform3f(lightPositionLoc, light.position.x, light.position.y, light.position.z);
 
-        GLint specularLoc = glGetUniformLocation(shaderProgram, "material.specular");
+        GLint specularLoc = glGetUniformLocation(shader.ID, "material.specular");
         glUniform3f(specularLoc, material.specular.x, material.specular.y, material.specular.z);
 
-        GLint ambientLoc = glGetUniformLocation(shaderProgram, "material.ambient");
+        GLint ambientLoc = glGetUniformLocation(shader.ID, "material.ambient");
         glUniform3f(ambientLoc, material.ambient.x, material.ambient.y, material.ambient.z);
 
-        GLint diffuseLoc = glGetUniformLocation(shaderProgram, "material.diffuse");
+        GLint diffuseLoc = glGetUniformLocation(shader.ID, "material.diffuse");
         glUniform3f(diffuseLoc, material.diffuse.x, material.diffuse.y, material.diffuse.z);
 
-        GLint shininessLoc = glGetUniformLocation(shaderProgram, "material.shininess");
+        GLint shininessLoc = glGetUniformLocation(shader.ID, "material.shininess");
         glUniform1f(shininessLoc, material.shininess);
 
 
-        unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
+        unsigned int transformLoc = glGetUniformLocation(shader.ID, "transform");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
-        unsigned int modelLoc = glGetUniformLocation(shaderProgram, "model");
+        unsigned int modelLoc = glGetUniformLocation(shader.ID, "model");
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-        unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
+        unsigned int viewLoc = glGetUniformLocation(shader.ID, "view");
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-        unsigned int projectionLoc = glGetUniformLocation(shaderProgram, "projection");
+        unsigned int projectionLoc = glGetUniformLocation(shader.ID, "projection");
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-        GLint viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
+        GLint viewPosLoc = glGetUniformLocation(shader.ID, "viewPos");
         glUniform3f(viewPosLoc, camera.position.x, camera.position.y, camera.position.z);
 
         // Привязываем VAO с треугольником
@@ -324,7 +187,16 @@ class Renderer {
     }
 
 
-    void DrawPoligon(float* vertices, Material material, string texturePath, string specTexture, Light light, unsigned int* indices, int vertices_size, int indices_size, unsigned int shaderProgram, mat4 trans = mat4(1.0f)) {
+    void DrawPoligon(
+        float* vertices,
+        Material material, string texturePath, string specTexture,
+        DirLight* dirLights, unsigned int dirLightsSize,
+        PointLight* pointLights, unsigned int pointLightsSize,
+        unsigned int* indices, int vertices_size, int indices_size,
+        Shader shader,
+        mat4 trans = mat4(1.0f)) {
+
+
         glm::mat4 model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         //glm::mat4 view          = glm::mat4(1.0f);
         glm::mat4 projection    = glm::mat4(1.0f);
@@ -375,51 +247,64 @@ class Renderer {
         // Draw =============================================================================================
 
 
-        glUseProgram(shaderProgram);
-
-        GLint lightAmbientLoc = glGetUniformLocation(shaderProgram, "light.ambient");
-        glUniform3f(lightAmbientLoc, light.ambient.x, light.ambient.y, light.ambient.z);
-
-        GLint lightDiffuseLoc = glGetUniformLocation(shaderProgram, "light.diffuse");
-        glUniform3f(lightDiffuseLoc, light.diffuse.x, light.diffuse.y, light.diffuse.z);
-
-        GLint lightSpecularLoc = glGetUniformLocation(shaderProgram, "light.specular");
-        glUniform3f(lightSpecularLoc, light.specular.x, light.specular.y, light.specular.z);
-
-        GLint lightPositionLoc = glGetUniformLocation(shaderProgram, "light.position");
-        glUniform3f(lightPositionLoc, light.position.x, light.position.y, light.position.z);
+        glUseProgram(shader.ID);
 
 
-        GLint diffuseLoc = glGetUniformLocation(shaderProgram, "material.diffuse");
+        // ========= LIGHTS ======================================
+        shader.SetInt("DirLightSize", dirLightsSize);
+        for (int i = 0; i < dirLightsSize; i++) {
+            shader.SetDirLight("dirLights["+to_string(i)+"]", dirLights[i]);
+        }
+        shader.SetInt("PointLightSize", pointLightsSize);
+        for (int i = 0; i < pointLightsSize; i++) {
+            shader.SetPointLight("pointLights["+to_string(i)+"]", pointLights[i]);
+        }
+
+        // GLint lightAmbientLoc = glGetUniformLocation(shaderProgram, "light.ambient");
+        // glUniform3f(lightAmbientLoc, light.ambient.x, light.ambient.y, light.ambient.z);
+        //
+        // GLint lightDiffuseLoc = glGetUniformLocation(shaderProgram, "light.diffuse");
+        // glUniform3f(lightDiffuseLoc, light.diffuse.x, light.diffuse.y, light.diffuse.z);
+        //
+        // GLint lightSpecularLoc = glGetUniformLocation(shaderProgram, "light.specular");
+        // glUniform3f(lightSpecularLoc, light.specular.x, light.specular.y, light.specular.z);
+        //
+        // GLint lightPositionLoc = glGetUniformLocation(shaderProgram, "light.position");
+        // glUniform3f(lightPositionLoc, light.position.x, light.position.y, light.position.z);
+
+
+
+
+        GLint diffuseLoc = glGetUniformLocation(shader.ID, "material.diffuse");
         glUniform1i(diffuseLoc, 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diftexture);
 
-        GLint specularLoc = glGetUniformLocation(shaderProgram, "material.specular");
+        GLint specularLoc = glGetUniformLocation(shader.ID, "material.specular");
         glUniform1i(specularLoc, 1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, spectexture);
 
-        GLint shininessLoc = glGetUniformLocation(shaderProgram, "material.shininess");
+        GLint shininessLoc = glGetUniformLocation(shader.ID, "material.shininess");
         glUniform1f(shininessLoc, material.shininess);
 
 
-        unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
+        unsigned int transformLoc = glGetUniformLocation(shader.ID, "transform");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
         // unsigned int modelLoc = glGetUniformLocation(textureShader, "model");
         // glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-        unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
+        unsigned int viewLoc = glGetUniformLocation(shader.ID, "view");
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-        unsigned int projectionLoc = glGetUniformLocation(shaderProgram, "projection");
+        unsigned int projectionLoc = glGetUniformLocation(shader.ID, "projection");
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-        unsigned int modelLoc = glGetUniformLocation(shaderProgram, "model");
+        unsigned int modelLoc = glGetUniformLocation(shader.ID, "model");
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-        GLint viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
+        GLint viewPosLoc = glGetUniformLocation(shader.ID, "viewPos");
         glUniform3f(viewPosLoc, camera.position.x, camera.position.y, camera.position.z);
 
         glBindVertexArray(VAO);
@@ -571,21 +456,4 @@ class Renderer {
         return indices;
     }
 
-
-    // Чтение данных из файлов, используется для шейдеров
-    string readFile(const char* filepath) {
-        ifstream file;
-        stringstream buffer;
-
-        file.open(filepath);
-        if (!file.is_open()) {
-            cerr << "Не удалось открыть файл: " << filepath << std::endl;
-            return "";
-        }
-
-        buffer << file.rdbuf();
-        file.close();
-
-        return buffer.str();
-    }
 };
